@@ -63,12 +63,6 @@ function createSlug($string) {
 
 }
 
-if(!empty($_POST['view-title'])) {
-	$view_title = createSlug($_POST['view-title']);
-} else {
-	$view_title = !empty($_GET['view']) ? createSlug($_GET['view']) : 'default';
-}
-
 $changedesc = gettext("Status: Monitoring:") . " ";
 if($_POST['enable']) {
 	if(($_POST['enable'] === 'false')) {
@@ -101,11 +95,11 @@ if(strpos($config['rrd']['category'], '&resolution') === false) {
 //save settings for current view
 if ($_POST['save-view']) {
 
-	$title = $view_title;
+	$title = $_POST['view-title'];
 
 	if (is_array($config['rrd']['savedviews'])) {
 
-		if($title == "default") {
+		if(!isset($title) || $title == "default") {
 
 			$config['rrd']['category'] = "left=".$_POST['graph-left']."&right=".$_POST['graph-right']."&timePeriod=".$_POST['time-period']."&resolution=".$_POST['resolution']."&startDate=".$_POST['start-date']."&endDate=".$_POST['end-date']."&startTime=".$_POST['start-time']."&endTime=".$_POST['end-time']."&graphtype=".$_POST['graph-type']."&invert=".$_POST['invert']."&refresh-interval=".$_POST['refresh-interval'];
 
@@ -135,9 +129,9 @@ if ($_POST['save-view']) {
 }
 
 //add a new view and make sure the string isn't empty
-if ($_POST['add-view']) {
+if ($_POST['add-view'] && $_POST['view-title'] != "") {
 
-	$title = $view_title;
+	$title = $_POST['view-title'];
 
 	$values = "left=".$_POST['graph-left']."&right=".$_POST['graph-right']."&timePeriod=".$_POST['time-period']."&resolution=".$_POST['resolution']."&startDate=".$_POST['start-date']."&endDate=".$_POST['end-date']."&startTime=".$_POST['start-time']."&endTime=".$_POST['end-time']."&graphtype=".$_POST['graph-type']."&invert=".$_POST['invert']."&refresh-interval=".$_POST['refresh-interval'];
 
@@ -163,13 +157,13 @@ $view_removed = false;
 //remove current view
 if ($_POST['remove-view']) {
 
-	if ($view_title == "default") {
+	if(empty($_POST['view-title']) || $_POST['view-title'] == "default") {
 
 		$savemsg = "Can't remove default view.";
 
 	} else {
 
-		$title = htmlspecialchars($view_title);
+		$title = htmlspecialchars($_POST['view-title']);
 
 		if (is_array($config['rrd']['savedviews'])) {
 
@@ -178,7 +172,7 @@ if ($_POST['remove-view']) {
 
 			foreach ($config['rrd']['savedviews'] as $key => $view) {
 
-				if (createSlug($view['title']) !== $title) {
+				if(createSlug($view['title']) !== $title) {
 
 					$view_key = "view" . $view_count;
 
@@ -207,10 +201,20 @@ if ($_POST['remove-view']) {
 
 $pconfig['enable'] = isset($config['rrd']['enable']);
 
+if(isset($_GET['view'])) {
+
+	$view_title = createSlug($_GET['view']);
+
+} else {
+
+	$view_title = createSlug($_POST['view-title']);
+
+}
+
 //grab settings for the active view
 if (is_array($config['rrd']['savedviews'])) {
 
-	if ($view_title == "default" || $view_removed) {
+	if($view_title == "" || $view_title == "default" || $view_removed) {
 
 		$pconfig['category'] = $config['rrd']['category'];
 
@@ -218,7 +222,7 @@ if (is_array($config['rrd']['savedviews'])) {
 
 		foreach ($config['rrd']['savedviews'] as $key => $view) {
 
-			if ($view_title === createSlug($view['title'])) {
+			if($view_title === createSlug($view['title'])) {
 
 				$pconfig['category'] =  $view['category'];
 
@@ -269,13 +273,13 @@ foreach ($databases as $db) {
 		$friendly = convert_friendly_interface_to_friendly_descr($db_arr[0]);
 
 		if (empty($friendly)) {
-			if (substr($db_arr[0], 0, 5) === "ovpns") {
+			if(substr($db_arr[0], 0, 5) === "ovpns") {
 
 				if (is_array($config['openvpn']["openvpn-server"])) {
 
 					foreach ($config['openvpn']["openvpn-server"] as $id => $setting) {
 
-						if ($config['openvpn']["openvpn-server"][$id]['vpnid'] === substr($db_arr[0],5)) {
+						if($config['openvpn']["openvpn-server"][$id]['vpnid'] === substr($db_arr[0],5)) {
 							$friendly = "OpenVPN Server: " . htmlspecialchars($config['openvpn']["openvpn-server"][$id]['description']);
 						}
 
@@ -299,13 +303,13 @@ foreach ($databases as $db) {
 		$friendly = convert_friendly_interface_to_friendly_descr($db_arr[0]);
 
 		if (empty($friendly)) {
-			if (substr($db_arr[0], 0, 5) === "ovpns") {
+			if(substr($db_arr[0], 0, 5) === "ovpns") {
 
 				if (is_array($config['openvpn']["openvpn-server"])) {
 
 					foreach ($config['openvpn']["openvpn-server"] as $id => $setting) {
 
-						if ($config['openvpn']["openvpn-server"][$id]['vpnid'] === substr($db_arr[0],5)) {
+						if($config['openvpn']["openvpn-server"][$id]['vpnid'] === substr($db_arr[0],5)) {
 							$friendly = "OpenVPN Server: " . htmlspecialchars($config['openvpn']["openvpn-server"][$id]['description']);
 						}
 
@@ -361,13 +365,13 @@ foreach ($databases as $db) {
 		$friendly = convert_friendly_interface_to_friendly_descr($db_arr[0]);
 
 		if (empty($friendly)) {
-			if (substr($db_arr[0], 0, 5) === "ovpns") {
+			if(substr($db_arr[0], 0, 5) === "ovpns") {
 
 				if (is_array($config['openvpn']["openvpn-server"])) {
 
 					foreach ($config['openvpn']["openvpn-server"] as $id => $setting) {
 
-						if ($config['openvpn']["openvpn-server"][$id]['vpnid'] === substr($db_arr[0],5)) {
+						if($config['openvpn']["openvpn-server"][$id]['vpnid'] === substr($db_arr[0],5)) {
 							$friendly = "OpenVPN Server: " . htmlspecialchars($config['openvpn']["openvpn-server"][$id]['description']);
 						}
 
@@ -411,7 +415,7 @@ if ($savemsg) {
 $tab_array = array();
 $active_tab = false;
 
-if ($view_title == "default" || $view_removed) {
+if($view_title == "" || $view_title == "default" || $view_removed) {
 
 	$active_tab = true;
 
@@ -425,7 +429,7 @@ if (is_array($config['rrd']['savedviews'])) {
 
 		$active_tab = false;
 
-		if ($view_title == createSlug($view['title'])) {
+		if($view_title == createSlug($view['title'])) {
 
 			$active_tab = true;
 
@@ -676,7 +680,7 @@ display_top_tabs($tab_array);
 			</div>
 		</div>
 	</div>
-	<input type="hidden" id="view-title" name="view-title" value="<?=htmlspecialchars($view_title)?>">
+	<input type="hidden" id="view-title" name="view-title" value="<?=htmlspecialchars($_GET['view'])?>">
 </form>
 
 <div class="panel panel-default">
